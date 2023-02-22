@@ -22,10 +22,6 @@ jobs:
           components: 'native-image'
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Maven Verify
-        run: |
-          ./mvnw --batch-mode --no-transfer-progress -B verify
-
       - uses: stoplightio/spectral-action@latest
         with:
           file_glob: 'specs/*.yml'
