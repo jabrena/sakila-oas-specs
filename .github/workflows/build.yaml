@@ -1,0 +1,37 @@
+name: CI Builds
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  run:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: graalvm/setup-graalvm@v1
+        with:
+          version: 'latest'
+          java-version: '17'
+          components: 'native-image'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Maven Verify
+        run: |
+          ./mvnw --batch-mode --no-transfer-progress -B verify
+
+      - uses: stoplightio/spectral-action@latest
+        with:
+          file_glob: 'specs/*.yml'
+
+      - name: OAS Validation
+        shell: bash
+        run: |
+          curl -Ls https://sh.jbang.dev | bash -s - app setup
+          ~/.jbang/bin/jbang .github/OASValidator.java .github/config.properties sakila-oas-specs/specs
